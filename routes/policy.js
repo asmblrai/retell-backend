@@ -1,22 +1,21 @@
-import { Router } from "express";
-import { getSignatureExists } from "../lib/adminClient.js";
-
+// routes/policy.js
+import Router from "express";
 const r = Router();
 
-// POST /retell/tools/get_signature_status { member_id, product_id?, policy_number? }
+// POST /retell/tools/get_signature_status
 r.post("/get_signature_status", async (req, res) => {
-  try {
-    const { member_id, product_id=0, policy_number=0 } = req.body || {};
-    if (!member_id) return res.status(400).json({ success:false, error:"MISSING_MEMBER_ID" });
+  const { member_id } = req.body || {};
+  if (!member_id) return res.status(400).json({ success: false, error: "MISSING_MEMBER_ID" });
 
-    const sig = await getSignatureExists({ memberId: member_id, productId: product_id || 0, policyNumber: policy_number || 0 });
-    if (!sig) return res.json({ success:false, error:"SIGNATURE_NOT_FOUND" });
-
-    // sig.exists: 1/0, "a": UUID if not exists (per doc), memberid
-    return res.json({ success:true, signature: sig });
-  } catch (e) {
-    res.status(502).json({ success:false, error:"UPSTREAM_ERROR", detail:String(e).slice(0,300) });
-  }
+  // We no longer call the Status API. Return a safe default for now.
+  return res.json({
+    success: true,
+    signature: {
+      exists: 0,       // 0 = no doc found (until we wire a real check)
+      a: null,         // UUID (would be returned if a doc existed)
+      memberid: member_id,
+    },
+  });
 });
 
 export default r;
